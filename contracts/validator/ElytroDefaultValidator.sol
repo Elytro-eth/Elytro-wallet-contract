@@ -13,10 +13,10 @@ import {TypeConversion} from "../libraries/TypeConversion.sol";
 import {WebAuthn} from "../libraries/WebAuthn.sol";
 
 /**
- * @title SoulWalletDefaultValidator
+ * @title ElytroDefaultValidator
  * @dev A contract that implements the IValidator interface for validating user operations and signatures.
  */
-contract SoulWalletDefaultValidator is IValidator {
+contract ElytroDefaultValidator is IValidator {
     // Magic value indicating a valid signature for ERC-1271 contracts
     // bytes4(keccak256("isValidSignature(bytes32,bytes)")
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import "../base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 
 import "@source/libraries/TypeConversion.sol";
 import "@source/dev/tokens/TokenERC20.sol";
@@ -23,21 +23,21 @@ contract DeployDirectTest is Test {
         DefaultCallbackHandler defaultCallbackHandler = new DefaultCallbackHandler();
         bytes32[] memory owners = new bytes32[](1);
         owners[0] = address(this).toBytes32();
-        SoulWalletInstence soulWalletInstence = new SoulWalletInstence(
-            address(defaultCallbackHandler), address(new SoulWalletDefaultValidator()), owners, modules, hooks, salt
+        ElytroInstence elytroInstence = new ElytroInstence(
+            address(defaultCallbackHandler), address(new ElytroDefaultValidator()), owners, modules, hooks, salt
         );
-        ISoulWallet soulWallet = soulWalletInstence.soulWallet();
-        assertEq(soulWallet.isOwner(address(this).toBytes32()), true);
-        assertEq(soulWallet.isOwner(address(0x1111).toBytes32()), false);
+        IElytro elytro = elytroInstence.elytro();
+        assertEq(elytro.isOwner(address(this).toBytes32()), true);
+        assertEq(elytro.isOwner(address(0x1111).toBytes32()), false);
 
         TokenERC20 token = new TokenERC20(18);
 
-        vm.startPrank(address(soulWalletInstence.entryPoint()));
+        vm.startPrank(address(elytroInstence.entryPoint()));
         // execute(address dest, uint256 value, bytes calldata func)
         vm.expectRevert(
-            abi.encodeWithSelector(ERC20InsufficientBalance.selector, address(soulWalletInstence.soulWallet()), 0, 1)
+            abi.encodeWithSelector(ERC20InsufficientBalance.selector, address(elytroInstence.elytro()), 0, 1)
         );
-        soulWallet.execute(address(token), 0, abi.encodeWithSignature("transfer(address,uint256)", address(0x1), 1));
+        elytro.execute(address(token), 0, abi.encodeWithSignature("transfer(address,uint256)", address(0x1), 1));
         vm.stopPrank();
     }
 }

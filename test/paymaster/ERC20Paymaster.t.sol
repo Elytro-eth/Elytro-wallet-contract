@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../soulwallet/base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import "../elytro/base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
 import "@source/paymaster/ERC20Paymaster.sol";
 import "@source/dev/tokens/TokenERC20.sol";
@@ -23,9 +23,9 @@ contract ERC20PaymasterTest is Test, UserOpHelper {
     using MessageHashUtils for bytes32;
     using TypeConversion for address;
 
-    SoulWalletInstence soulWalletInstence;
-    SoulWalletDefaultValidator soulWalletDefaultValidator;
-    ISoulWallet soulWallet;
+    ElytroInstence elytroInstence;
+    ElytroDefaultValidator elytroDefaultValidator;
+    IElytro elytro;
     ERC20Paymaster paymaster;
     Bundler bundler;
 
@@ -55,14 +55,14 @@ contract ERC20PaymasterTest is Test, UserOpHelper {
         bytes32[] memory owners = new bytes32[](1);
         owners[0] = address(ownerAddr).toBytes32();
         DefaultCallbackHandler defaultCallbackHandler = new DefaultCallbackHandler();
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
-        soulWalletInstence = new SoulWalletInstence(
-            address(defaultCallbackHandler), address(soulWalletDefaultValidator), owners, modules, hooks, salt
+        elytroDefaultValidator = new ElytroDefaultValidator();
+        elytroInstence = new ElytroInstence(
+            address(defaultCallbackHandler), address(elytroDefaultValidator), owners, modules, hooks, salt
         );
-        soulWallet = soulWalletInstence.soulWallet();
-        entryPoint = soulWalletInstence.entryPoint();
+        elytro = elytroInstence.elytro();
+        entryPoint = elytroInstence.entryPoint();
 
-        paymaster = new ERC20Paymaster(entryPoint, paymasterOwner, soulWalletInstence.soulWalletFactory.address);
+        paymaster = new ERC20Paymaster(entryPoint, paymasterOwner, elytroInstence.elytroFactory.address);
 
         vm.deal(paymasterOwner, 10000e18);
         vm.startPrank(paymasterOwner);
@@ -109,22 +109,22 @@ contract ERC20PaymasterTest is Test, UserOpHelper {
     }
 
     function testWithoutPaymaster() external {
-        vm.deal(address(soulWallet), 1e18);
+        vm.deal(address(elytro), 1e18);
         (PackedUserOperation memory op, uint256 prefund) =
-            fillUserOp(soulWallet, ownerKey, address(helloWorld), 0, abi.encodeWithSelector(helloWorld.output.selector));
+            fillUserOp(elytro, ownerKey, address(helloWorld), 0, abi.encodeWithSelector(helloWorld.output.selector));
         (prefund);
-        op.signature = signUserOp(soulWalletInstence.entryPoint(), op, ownerKey, address(soulWalletDefaultValidator));
+        op.signature = signUserOp(elytroInstence.entryPoint(), op, ownerKey, address(elytroDefaultValidator));
         bundler.post(IEntryPoint(entryPoint), op);
     }
 
     function testERC20Paymaster() external {
-        vm.deal(address(soulWallet), 1e18);
+        vm.deal(address(elytro), 1e18);
         paymaster.updatePrice(address(token));
-        token.sudoMint(address(soulWallet), 1000e6);
+        token.sudoMint(address(elytro), 1000e6);
         token.sudoMint(address(paymaster), 1);
-        token.sudoApprove(address(soulWallet), address(paymaster), 1000e6);
+        token.sudoApprove(address(elytro), address(paymaster), 1000e6);
         (PackedUserOperation memory op, uint256 prefund) =
-            fillUserOp(soulWallet, ownerKey, address(helloWorld), 0, abi.encodeWithSelector(helloWorld.output.selector));
+            fillUserOp(elytro, ownerKey, address(helloWorld), 0, abi.encodeWithSelector(helloWorld.output.selector));
         (prefund);
         vm.breakpoint("a");
         op.paymasterAndData = BytesLibTest.concat(
@@ -132,11 +132,11 @@ contract ERC20PaymasterTest is Test, UserOpHelper {
             abi.encode(address(token), uint256(1000e6))
         );
         vm.breakpoint("b");
-        op.signature = signUserOp(soulWalletInstence.entryPoint(), op, ownerKey, address(soulWalletDefaultValidator));
+        op.signature = signUserOp(elytroInstence.entryPoint(), op, ownerKey, address(elytroDefaultValidator));
         bundler.post(IEntryPoint(entryPoint), op);
     }
 
-    function fillUserOp(ISoulWallet _sender, uint256 _key, address _to, uint256 _value, bytes memory _data)
+    function fillUserOp(IElytro _sender, uint256 _key, address _to, uint256 _value, bytes memory _data)
         public
         returns (PackedUserOperation memory op, uint256 prefund)
     {
@@ -154,7 +154,7 @@ contract ERC20PaymasterTest is Test, UserOpHelper {
             paymasterAndData: hex""
         });
 
-        op.signature = signUserOp(soulWalletInstence.entryPoint(), op, _key, address(soulWalletDefaultValidator));
+        op.signature = signUserOp(elytroInstence.entryPoint(), op, _key, address(elytroDefaultValidator));
     }
 
     function simulateCallGas(EntryPoint _entrypoint, PackedUserOperation memory op) internal returns (uint256) {

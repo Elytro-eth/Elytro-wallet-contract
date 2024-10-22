@@ -1,9 +1,9 @@
 <div align="center">
-  <h1 align="center">SoulWallet Contracts [draft version]</h1>  
+  <h1 align="center">Elytro Contracts [Formerly SoulWallet Contracts]</h1>
 </div>
 
 <div align="center">
-<img src="https://github.com/SoulWallet/soul-wallet-contract/assets/1399563/8678c33d-2e86-4cd8-99b3-4a856e8ee60e">
+<img src="./logo.png">
 </div>
 
 ## Features
@@ -13,11 +13,11 @@
 - Upgradability: The smart contract for this wallet can be upgraded in a secure way to add new features or fix vulnerabilities in the future.
 - Stablecoin pay gas: Users can pay transaction gas fees with stablecoins such as USDC, USDT, DAI, etc.
 
-## Architecutre
+## Architecture
 
 The smart contract comprises three main logic components:
 
-1. SoulWallet Core:
+1.Elytro Core:
 
 - This is the primary wallet logic.
 - Supports the ERC4337 interface.
@@ -36,7 +36,7 @@ The smart contract comprises three main logic components:
 
 ## Repository Structure
 
-All contracts are held within the `soul-wallet-contract/contracts` folder.
+All contracts are held within the `Elytro-wallet-contract/contracts` folder.
 
 ```
 contracts
@@ -69,7 +69,7 @@ npm run test
 
 ## Integration
 
-Third parties can build new modules/plugins on top of SoulWallet to add additional functionality.
+Third parties can build new modules/plugins on top of Elytro to add additional functionality.
 
 ### Module
 

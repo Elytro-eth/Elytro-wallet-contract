@@ -6,7 +6,7 @@ import "./IUpgrade.sol";
 import "../../interfaces/IUpgradable.sol";
 
 /*
-The UpgradeModule is responsible for upgrading the logic contract of SoulWallet.
+The UpgradeModule is responsible for upgrading the logic contract of Elytro.
 */
 contract UpgradeModule is BaseModule, IUpgrade {
     address public newImplementation;

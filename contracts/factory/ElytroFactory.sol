@@ -5,27 +5,27 @@ pragma solidity ^0.8.20;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-import "../SoulWallet.sol";
+import "../Elytro.sol";
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {IEntryPoint} from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title SoulWalletFactory
- * @author soulwallet team
- * @notice A factory contract to create soul wallets
+ * @title ElytroFactory
+ * @author Elytro team
+ * @notice A factory contract to create elytro wallets
  * @dev This contract is called by the entrypoint which uses the "initCode" to create and return the sender's wallet address
  */
-contract SoulWalletFactory is Ownable {
+contract ElytroFactory is Ownable {
     address public immutable _WALLETIMPL;
     IEntryPoint public immutable entryPoint;
     string public constant VERSION = "0.0.1";
 
-    event SoulWalletCreation(address indexed proxy);
+    event ElytroCreation(address indexed proxy);
 
     /**
      * @dev Initializes the factory with the wallet implementation and entry point addresses
-     * @param _walletImpl Address of the SoulWallet implementation
+     * @param _walletImpl Address of the Elytro implementation
      * @param _entryPoint Address of the EntryPoint contract
      * @param _owner Address of the contract owner
      */
@@ -41,7 +41,7 @@ contract SoulWalletFactory is Ownable {
     }
 
     /**
-     * @dev Deploys the SoulWallet using a proxy and returns the proxy's address
+     * @dev Deploys the Elytro using a proxy and returns the proxy's address
      * @param _initializer Initialization data
      * @param _salt Salt for the create2 deployment
      * @return proxy Address of the deployed proxy
@@ -65,12 +65,12 @@ contract SoulWalletFactory is Ownable {
             let succ := call(gas(), proxy, 0, add(_initializer, 0x20), mload(_initializer), 0, 0)
             if eq(succ, 0) { revert(0, 0) }
         }
-        emit SoulWalletCreation(proxy);
+        emit ElytroCreation(proxy);
     }
 
     /**
      * @notice Returns the proxy's creation code
-     * @dev Used by soulwalletlib to calculate the SoulWallet address
+     * @dev Used by ElytroLib to calculate the Elytro address
      * @return Byte array representing the proxy's creation code
      */
     function proxyCode() external view returns (bytes memory) {
@@ -89,10 +89,10 @@ contract SoulWalletFactory is Ownable {
     }
 
     /**
-     * @notice Calculates the counterfactual address of the SoulWallet as it would be returned by `createWallet`
+     * @notice Calculates the counterfactual address of the Elytro as it would be returned by `createWallet`
      * @param _initializer Initialization data
      * @param _salt Salt for the create2 deployment
-     * @return proxy Counterfactual address of the SoulWallet
+     * @return proxy Counterfactual address of the Elytro
      */
     function getWalletAddress(bytes memory _initializer, bytes32 _salt) public view returns (address proxy) {
         bytes memory deploymentData = _proxyCode(_WALLETIMPL);

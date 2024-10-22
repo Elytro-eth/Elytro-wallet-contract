@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../soulwallet/base/SoulWalletInstence.sol";
+import "../elytro/base/ElytroInstence.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
 import "@source/paymaster/ERC20Paymaster.sol";
 import "@source/dev/tokens/TokenERC20.sol";
@@ -13,7 +13,7 @@ import "../helper/UserOpHelper.t.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@source/libraries/TypeConversion.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import {UserOperationHelper} from "@soulwallet-core/test/dev/userOperationHelper.sol";
 
 contract ERC20PaymasterActiveWalletTest is Test, UserOpHelper {
@@ -21,12 +21,12 @@ contract ERC20PaymasterActiveWalletTest is Test, UserOpHelper {
     using MessageHashUtils for bytes32;
     using TypeConversion for address;
 
-    SoulWalletLogicInstence public soulWalletLogicInstence;
-    SoulWalletFactory public soulWalletFactory;
-    ISoulWallet soulWallet;
+    ElytroLogicInstence public elytroLogicInstence;
+    ElytroFactory public elytroFactory;
+    IElytro elytro;
     ERC20Paymaster paymaster;
     Bundler bundler;
-    SoulWalletDefaultValidator defaultValidator;
+    ElytroDefaultValidator defaultValidator;
     DefaultCallbackHandler defaultCallbackHandler;
 
     using TypeConversion for address;
@@ -54,13 +54,13 @@ contract ERC20PaymasterActiveWalletTest is Test, UserOpHelper {
         bundler = new Bundler();
 
         entryPoint = new EntryPoint();
-        defaultValidator = new SoulWalletDefaultValidator();
-        soulWalletLogicInstence = new SoulWalletLogicInstence(address(entryPoint), address(defaultValidator));
-        address logic = address(soulWalletLogicInstence.soulWalletLogic());
-        soulWalletFactory = new SoulWalletFactory(logic, address(entryPoint), address(this));
-        require(soulWalletFactory._WALLETIMPL() == logic, "logic address not match");
+        defaultValidator = new ElytroDefaultValidator();
+        elytroLogicInstence = new ElytroLogicInstence(address(entryPoint), address(defaultValidator));
+        address logic = address(elytroLogicInstence.elytroLogic());
+        elytroFactory = new ElytroFactory(logic, address(entryPoint), address(this));
+        require(elytroFactory._WALLETIMPL() == logic, "logic address not match");
 
-        paymaster = new ERC20Paymaster(entryPoint, paymasterOwner, address(soulWalletFactory));
+        paymaster = new ERC20Paymaster(entryPoint, paymasterOwner, address(elytroFactory));
 
         vm.deal(paymasterOwner, 10000e18);
         vm.startPrank(paymasterOwner);
@@ -103,14 +103,14 @@ contract ERC20PaymasterActiveWalletTest is Test, UserOpHelper {
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
 
-        address cacluatedAddress = soulWalletFactory.getWalletAddress(initializer, salt);
+        address cacluatedAddress = elytroFactory.getWalletAddress(initializer, salt);
         // deal some token to the wallet
         deal(address(token), cacluatedAddress, 10000e18);
 
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
 
-        bytes memory soulWalletFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
-        bytes memory initCode = abi.encodePacked(address(soulWalletFactory), soulWalletFactoryCall);
+        bytes memory elytroFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
+        bytes memory initCode = abi.encodePacked(address(elytroFactory), elytroFactoryCall);
 
         PackedUserOperation memory userOperation = UserOperationHelper.newUserOp({
             sender: cacluatedAddress,
@@ -158,14 +158,14 @@ contract ERC20PaymasterActiveWalletTest is Test, UserOpHelper {
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
 
-        address cacluatedAddress = soulWalletFactory.getWalletAddress(initializer, salt);
+        address cacluatedAddress = elytroFactory.getWalletAddress(initializer, salt);
         // deal some token to the wallet
         deal(address(token), cacluatedAddress, 10000e18);
 
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
 
-        bytes memory soulWalletFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
-        bytes memory initCode = abi.encodePacked(address(soulWalletFactory), soulWalletFactoryCall);
+        bytes memory elytroFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
+        bytes memory initCode = abi.encodePacked(address(elytroFactory), elytroFactoryCall);
 
         PackedUserOperation memory userOperation = UserOperationHelper.newUserOp({
             sender: cacluatedAddress,

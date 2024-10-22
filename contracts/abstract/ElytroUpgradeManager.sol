@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 import "../interfaces/IUpgradable.sol";
 import "../libraries/Errors.sol";
 /**
- * @title SoulWalletUpgradeManager
+ * @title ElytroUpgradeManager
  * @dev This contract allows for the logic of a proxy to be upgraded
  */
 
-abstract contract SoulWalletUpgradeManager is IUpgradable {
+abstract contract ElytroUpgradeManager is IUpgradable {
     /**
      * @dev Storage slot with the address of the current implementation
      * This is the keccak-256 hash of "eip1967.proxy.implementation" subtracted by 1

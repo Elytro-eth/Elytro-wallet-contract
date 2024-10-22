@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import "../base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import "@source/libraries/TypeConversion.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
@@ -14,18 +14,18 @@ contract DeployDirectTest is Test {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
     bytes4 internal constant INVALID_ID = 0xffffffff;
 
-    ISoulWallet soulWallet;
-    SoulWalletInstence soulWalletInstence;
-    SoulWalletDefaultValidator soulWalletDefaultValidator;
+    IElytro elytro;
+    ElytroInstence elytroInstence;
+    ElytroDefaultValidator elytroDefaultValidator;
     address public walletOwner;
     uint256 public walletOwnerPrivateKey;
-    bytes32 private constant SOUL_WALLET_MSG_TYPEHASH = keccak256("SoulWalletMessage(bytes32 message)");
+    bytes32 private constant ELYTRO_WALLET_MSG_TYPEHASH = keccak256("ElytroMessage(bytes32 message)");
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
         keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     function encodeRawHash(bytes32 rawHash, address account) private view returns (bytes32) {
-        bytes32 encode1271MessageHash = keccak256(abi.encode(SOUL_WALLET_MSG_TYPEHASH, rawHash));
+        bytes32 encode1271MessageHash = keccak256(abi.encode(ELYTRO_WALLET_MSG_TYPEHASH, rawHash));
         bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, getChainId(), address(account)));
         return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator, encode1271MessageHash));
     }
@@ -47,11 +47,11 @@ contract DeployDirectTest is Test {
         DefaultCallbackHandler defaultCallbackHandler = new DefaultCallbackHandler();
         bytes32[] memory owners = new bytes32[](1);
         owners[0] = walletOwner.toBytes32();
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
-        soulWalletInstence = new SoulWalletInstence(
-            address(defaultCallbackHandler), address(soulWalletDefaultValidator), owners, modules, hooks, salt
+        elytroDefaultValidator = new ElytroDefaultValidator();
+        elytroInstence = new ElytroInstence(
+            address(defaultCallbackHandler), address(elytroDefaultValidator), owners, modules, hooks, salt
         );
-        soulWallet = soulWalletInstence.soulWallet();
+        elytro = elytroInstence.elytro();
     }
 
     function signMsg(uint256 privateKey, bytes32 _hash, address validatorAddress)
@@ -68,10 +68,10 @@ contract DeployDirectTest is Test {
 
     function testVerify1271Signature() public view {
         bytes32 hash = keccak256("hello world");
-        bytes32 rawHash = encodeRawHash(hash, address(soulWallet));
-        bytes memory signature = signMsg(walletOwnerPrivateKey, rawHash, address(soulWalletDefaultValidator));
-        console.log("soulwallet", address(soulWallet));
-        bytes4 result = IERC1271(address(soulWallet)).isValidSignature(hash, signature);
+        bytes32 rawHash = encodeRawHash(hash, address(elytro));
+        bytes memory signature = signMsg(walletOwnerPrivateKey, rawHash, address(elytroDefaultValidator));
+        console.log("elytro", address(elytro));
+        bytes4 result = IERC1271(address(elytro)).isValidSignature(hash, signature);
         assertEq(result, MAGICVALUE);
     }
 }

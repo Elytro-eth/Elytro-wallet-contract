@@ -3,12 +3,12 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import "@source/validator/SoulWalletDefaultValidator.sol";
+import "@source/validator/ElytroDefaultValidator.sol";
 import "@source/libraries/TypeConversion.sol";
-import {ISoulWallet} from "@source/interfaces/ISoulWallet.sol";
+import {IElytro} from "@source/interfaces/IElytro.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
-import {SoulWalletInstence} from "../soulwallet/base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import {ElytroInstence} from "../elytro/base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import {P256} from "@openzeppelin/contracts/utils/cryptography/P256.sol";
 
 contract ValidatorSigDecoderTest is Test {
@@ -16,19 +16,19 @@ contract ValidatorSigDecoderTest is Test {
     // Constants indicating different invalid states
     bytes4 internal constant INVALID_ID = 0xffffffff;
     bytes4 internal constant INVALID_TIME_RANGE = 0xfffffffe;
-    SoulWalletDefaultValidator soulWalletDefaultValidator;
+    ElytroDefaultValidator elytroDefaultValidator;
 
     using TypeConversion for address;
     using MessageHashUtils for bytes32;
 
     address public owner;
     uint256 public ownerKey;
-    SoulWalletInstence public soulWalletInstence;
-    ISoulWallet soulWallet;
+    ElytroInstence public elytroInstence;
+    IElytro elytro;
 
     function setUp() public {
         (owner, ownerKey) = makeAddrAndKey("owner");
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
+        elytroDefaultValidator = new ElytroDefaultValidator();
         bytes[] memory modules = new bytes[](0);
         bytes[] memory hooks = new bytes[](0);
         bytes32 salt = bytes32(0);
@@ -43,12 +43,12 @@ contract ValidatorSigDecoderTest is Test {
         console.logBytes32(passkeyOwner);
         owners[1] = passkeyOwner;
 
-        soulWalletInstence = new SoulWalletInstence(
-            address(defaultCallbackHandler), address(new SoulWalletDefaultValidator()), owners, modules, hooks, salt
+        elytroInstence = new ElytroInstence(
+            address(defaultCallbackHandler), address(new ElytroDefaultValidator()), owners, modules, hooks, salt
         );
-        soulWallet = soulWalletInstence.soulWallet();
-        assertEq(soulWallet.isOwner(owner.toBytes32()), true);
-        assertEq(soulWallet.isOwner(passkeyOwner), true);
+        elytro = elytroInstence.elytro();
+        assertEq(elytro.isOwner(owner.toBytes32()), true);
+        assertEq(elytro.isOwner(passkeyOwner), true);
     }
 
     /*
@@ -88,8 +88,8 @@ contract ValidatorSigDecoderTest is Test {
         assertEq(sig.length, 65);
         uint8 signType = 0;
         bytes memory validatorSignature = abi.encodePacked(signType, sig);
-        vm.startPrank(address(soulWallet));
-        bytes4 validateResult = soulWalletDefaultValidator.validateSignature(owner, hash, validatorSignature);
+        vm.startPrank(address(elytro));
+        bytes4 validateResult = elytroDefaultValidator.validateSignature(owner, hash, validatorSignature);
         assertEq(validateResult, MAGICVALUE);
     }
     /*
@@ -118,8 +118,8 @@ contract ValidatorSigDecoderTest is Test {
         assertEq(sig.length, 65);
         uint8 signType = 1;
         bytes memory validatorSignature = abi.encodePacked(signType, validationData, sig);
-        vm.startPrank(address(soulWallet));
-        bytes4 validateResult = soulWalletDefaultValidator.validateSignature(owner, hash, validatorSignature);
+        vm.startPrank(address(elytro));
+        bytes4 validateResult = elytroDefaultValidator.validateSignature(owner, hash, validatorSignature);
         assertEq(validateResult, MAGICVALUE);
     }
     /*
@@ -152,8 +152,8 @@ contract ValidatorSigDecoderTest is Test {
 
         uint8 signType = 0x2;
         bytes memory validatorSignature = abi.encodePacked(signType, sig);
-        vm.startPrank(address(soulWallet));
-        bytes4 result = soulWalletDefaultValidator.validateSignature(msg.sender, userOpHash, validatorSignature);
+        vm.startPrank(address(elytro));
+        bytes4 result = elytroDefaultValidator.validateSignature(msg.sender, userOpHash, validatorSignature);
         assertEq(result, MAGICVALUE);
     }
 

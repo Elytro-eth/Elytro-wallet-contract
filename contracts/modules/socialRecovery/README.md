@@ -6,7 +6,7 @@ The `SocialRecoveryModule` is a Solidity contract that can be installed in walle
 
 ![social recovery flow](socialReoceryFlow.png)
 
-- Step 1: Users install the Social Recovery Module in their SoulWallet. They need to configure the guardian hash and the execution delay period when installing the module. The guardian hash refers to the keccak256 hash of the GuardianData, ensuring the privacy of guardian identities. Others cannot check your guardians' settings on-chain and they are only revealed when the user initiates the social recovery process.
+- Step 1: Users install the Social Recovery Module in their Elytro. They need to configure the guardian hash and the execution delay period when installing the module. The guardian hash refers to the keccak256 hash of the GuardianData, ensuring the privacy of guardian identities. Others cannot check your guardians' settings on-chain and they are only revealed when the user initiates the social recovery process.
 
   ```solidity
     struct GuardianData {

@@ -9,7 +9,7 @@ import "@source/automation/ClaimInterest.sol";
 contract AutomationDeployer is Script, DeployHelper {
     address automationOwner;
     uint256 automationOwnerPrivateKey;
-    address soulwalletFactory;
+    address elytroFactory;
     address automationBot;
     uint256 automationBotPrivateKey;
 
@@ -20,9 +20,9 @@ contract AutomationDeployer is Script, DeployHelper {
         automationBotPrivateKey = vm.envUint("AUTOMATION_BOT_PRIVATE_KEY");
         automationBot = vm.addr(automationBotPrivateKey);
         require(automationOwner != address(0), "AUTOMATION_OWNER_ADDRESS not provided");
-        soulwalletFactory = vm.envAddress("SOULWALLET_FACTORY_ADDRESS");
-        require(soulwalletFactory != address(0), "SOULWALLET_FACTORY_ADDRESS not provided");
-        require(address(soulwalletFactory).code.length > 0, "soulwalletFactory needs be deployed");
+        elytroFactory = vm.envAddress("ELYTRO_FACTORY_ADDRESS");
+        require(elytroFactory != address(0), "ELYTRO_FACTORY_ADDRESS not provided");
+        require(address(elytroFactory).code.length > 0, "elytroFactory needs be deployed");
         vm.startBroadcast(privateKey);
 
         Network network = getNetwork();
@@ -60,7 +60,7 @@ contract AutomationDeployer is Script, DeployHelper {
             "AaveUsdcSaveAutomationSepolia",
             bytes.concat(type(AaveUsdcSaveAutomation).creationCode, abi.encode(automationOwner, usdc, aaveUscPool))
         );
-        writeAddressToEnv("SOUL_WALLET_AAVE_USDC_AUTOMATION_SEPOLIA", aaveUsdcAutomation);
+        writeAddressToEnv("ELYTRO_AAVE_USDC_AUTOMATION_SEPOLIA", aaveUsdcAutomation);
     }
 
     function delpoyArbSepolia() private {
@@ -71,7 +71,7 @@ contract AutomationDeployer is Script, DeployHelper {
             "AaveUsdcSaveAutomationArbSepolia",
             bytes.concat(type(AaveUsdcSaveAutomation).creationCode, abi.encode(automationOwner, usdc, aaveUscPool))
         );
-        writeAddressToEnv("SOUL_WALLET_AAVE_USDC_AUTOMATION_ARB_SEPOLIA", aaveUsdcAutomation);
+        writeAddressToEnv("ELYTRO_AAVE_USDC_AUTOMATION_ARB_SEPOLIA", aaveUsdcAutomation);
     }
 
     function delpoyOpSepolia() private {
@@ -82,7 +82,7 @@ contract AutomationDeployer is Script, DeployHelper {
             "AaveUsdcSaveAutomationOpSepolia",
             bytes.concat(type(AaveUsdcSaveAutomation).creationCode, abi.encode(automationOwner, usdc, aaveUscPool))
         );
-        writeAddressToEnv("SOUL_WALLET_AAVE_USDC_AUTOMATION_OP_SEPOLIA", aaveUsdcAutomation);
+        writeAddressToEnv("ELYTRO_AAVE_USDC_AUTOMATION_OP_SEPOLIA", aaveUsdcAutomation);
     }
 
     function delpoyOp() private {
@@ -93,7 +93,7 @@ contract AutomationDeployer is Script, DeployHelper {
             "AaveUsdcSaveAutomationOpMainnet",
             bytes.concat(type(AaveUsdcSaveAutomation).creationCode, abi.encode(automationOwner, usdc, aaveUscPool))
         );
-        writeAddressToEnv("SOUL_WALLET_AAVE_USDC_AUTOMATION_OP_MAINNET", aaveUsdcAutomation);
+        writeAddressToEnv("ELYTRO_AAVE_USDC_AUTOMATION_OP_MAINNET", aaveUsdcAutomation);
     }
 
     function delpoyOpClaimInterest() private {
@@ -116,6 +116,6 @@ contract AutomationDeployer is Script, DeployHelper {
             "AaveUsdcSaveAutomationBaseSepolia",
             bytes.concat(type(AaveUsdcSaveAutomation).creationCode, abi.encode(automationOwner, usdc, aaveUscPool))
         );
-        writeAddressToEnv("SOUL_WALLET_AAVE_USDC_AUTOMATION_BASE_SEPOLIA", aaveUsdcAutomation);
+        writeAddressToEnv("ELYTRO_AAVE_USDC_AUTOMATION_BASE_SEPOLIA", aaveUsdcAutomation);
     }
 }

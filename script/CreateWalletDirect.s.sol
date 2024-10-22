@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "@source/factory/SoulWalletFactory.sol";
+import "@source/factory/ElytroFactory.sol";
 import "./DeployHelper.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {NetWorkLib} from "./DeployHelper.sol";
@@ -24,9 +24,9 @@ contract CreateWalletDirect is Script {
 
     address defaultCallbackHandler;
 
-    SoulWalletFactory soulwalletFactory;
+    ElytroFactory elytroFactory;
 
-    address payable soulwalletAddress;
+    address payable elytroAddress;
 
     bytes32 private constant _TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -60,12 +60,12 @@ contract CreateWalletDirect is Script {
         bytes memory initializer = abi.encodeWithSignature(
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
-        soulwalletFactory = SoulWalletFactory(loadEnvContract("SoulwalletFactory"));
-        address cacluatedAddress = soulwalletFactory.getWalletAddress(initializer, salt);
+        elytroFactory = ElytroFactory(loadEnvContract("ElytroFactory"));
+        address cacluatedAddress = elytroFactory.getWalletAddress(initializer, salt);
 
-        soulwalletAddress = payable(soulwalletFactory.createWallet(initializer, salt));
-        require(cacluatedAddress == soulwalletAddress, "calculated address not match");
-        console.log("wallet address: ", soulwalletAddress);
+        elytroAddress = payable(elytroFactory.createWallet(initializer, salt));
+        require(cacluatedAddress == elytroAddress, "calculated address not match");
+        console.log("wallet address: ", elytroAddress);
     }
 
     function loadEnvContract(string memory label) private view returns (address) {

@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.20;
 
-import "../abstract/SoulWalletUpgradeManager.sol";
+import "../abstract/ElytroUpgradeManager.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract NewImplementation is Initializable, SoulWalletUpgradeManager {
+contract NewImplementation is Initializable, ElytroUpgradeManager {
     address public immutable WALLETIMPL;
-    bytes32 public constant CURRENT_UPGRADE_SLOT = keccak256("soul.wallet.upgradeTo_NewImplementation");
+    bytes32 public constant CURRENT_UPGRADE_SLOT = keccak256("elytro.wallet.upgradeTo_NewImplementation");
 
     constructor() {
         WALLETIMPL = address(this);

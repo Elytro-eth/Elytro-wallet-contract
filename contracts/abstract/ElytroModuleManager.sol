@@ -2,12 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {ModuleManager} from "@soulwallet-core/contracts/base/ModuleManager.sol";
-import {ISoulWalletModuleManager} from "../interfaces/ISoulWalletModuleManager.sol";
-import {ISoulWalletModule} from "../modules/interfaces/ISoulWalletModule.sol";
+import {IElytroModuleManager} from "../interfaces/IElytroModuleManager.sol";
+import {IElytroModule} from "../modules/interfaces/IElytroModule.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-abstract contract SoulWalletModuleManager is ISoulWalletModuleManager, ModuleManager {
+abstract contract ElytroModuleManager is IElytroModuleManager, ModuleManager {
     function installModule(bytes calldata moduleAndData) external override {
         pluginManagementAccess();
         _addModule(moduleAndData);
@@ -19,7 +19,7 @@ abstract contract SoulWalletModuleManager is ISoulWalletModuleManager, ModuleMan
      */
     function _isSupportsModuleInterface(address moduleAddress) internal view override returns (bool supported) {
         bytes memory callData =
-            abi.encodeWithSelector(IERC165.supportsInterface.selector, type(ISoulWalletModule).interfaceId);
+            abi.encodeWithSelector(IERC165.supportsInterface.selector, type(IElytroModule).interfaceId);
         assembly ("memory-safe") {
             // memorySafe: The scratch space between memory offset 0 and 64.
             let result := staticcall(gas(), moduleAddress, add(callData, 0x20), mload(callData), 0x00, 0x20)
@@ -29,7 +29,7 @@ abstract contract SoulWalletModuleManager is ISoulWalletModuleManager, ModuleMan
 
     function _addModule(bytes calldata moduleAndData) internal {
         address moduleAddress = address(bytes20(moduleAndData[:20]));
-        ISoulWalletModule aModule = ISoulWalletModule(moduleAddress);
+        IElytroModule aModule = IElytroModule(moduleAddress);
         bytes4[] memory requiredFunctions = aModule.requiredFunctions();
         if (requiredFunctions.length == 0) {
             revert Errors.MODULE_SELECTORS_EMPTY();

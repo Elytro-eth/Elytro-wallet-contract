@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {HookManager} from "@soulwallet-core/contracts/base/HookManager.sol";
-import {ISoulWalletHookManager} from "../interfaces/ISoulWalletHookManager.sol";
+import {IElytroHookManager} from "../interfaces/IElytroHookManager.sol";
 
-abstract contract SoulWalletHookManager is ISoulWalletHookManager, HookManager {
+abstract contract ElytroHookManager is IElytroHookManager, HookManager {
     function _installHook(bytes calldata hookAndDataWithFlag) internal virtual {
         _installHook(
             address(bytes20(hookAndDataWithFlag[:20])),

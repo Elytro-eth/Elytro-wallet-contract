@@ -3,31 +3,31 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
-import "@source/validator/SoulWalletDefaultValidator.sol";
-import {SoulWalletFactory} from "@source/factory/SoulWalletFactory.sol";
+import "@source/validator/ElytroDefaultValidator.sol";
+import {ElytroFactory} from "@source/factory/ElytroFactory.sol";
 import "@source/libraries/TypeConversion.sol";
-import {SoulWalletLogicInstence} from "../base/SoulWalletLogicInstence.sol";
+import {ElytroLogicInstence} from "../base/ElytroLogicInstence.sol";
 import {UserOpHelper} from "../../helper/UserOpHelper.t.sol";
 import {UserOperationHelper} from "@soulwallet-core/test/dev/userOperationHelper.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
 
-contract SoulWalletFactoryTest is Test, UserOpHelper {
+contract ElytroFactoryTest is Test, UserOpHelper {
     using TypeConversion for address;
 
-    SoulWalletDefaultValidator public soulWalletDefaultValidator;
-    SoulWalletLogicInstence public soulWalletLogicInstence;
-    SoulWalletFactory public soulWalletFactory;
+    ElytroDefaultValidator public elytroDefaultValidator;
+    ElytroLogicInstence public elytroLogicInstence;
+    ElytroFactory public elytroFactory;
     DefaultCallbackHandler public defaultCallbackHandler;
 
     function setUp() public {
         defaultCallbackHandler = new DefaultCallbackHandler();
         entryPoint = new EntryPoint();
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
-        soulWalletLogicInstence = new SoulWalletLogicInstence(address(entryPoint), address(soulWalletDefaultValidator));
-        address logic = address(soulWalletLogicInstence.soulWalletLogic());
+        elytroDefaultValidator = new ElytroDefaultValidator();
+        elytroLogicInstence = new ElytroLogicInstence(address(entryPoint), address(elytroDefaultValidator));
+        address logic = address(elytroLogicInstence.elytroLogic());
 
-        soulWalletFactory = new SoulWalletFactory(logic, address(entryPoint), address(this));
-        require(soulWalletFactory._WALLETIMPL() == logic, "logic address not match");
+        elytroFactory = new ElytroFactory(logic, address(entryPoint), address(this));
+        require(elytroFactory._WALLETIMPL() == logic, "logic address not match");
     }
 
     function test_deployWallet() public {
@@ -39,8 +39,8 @@ contract SoulWalletFactoryTest is Test, UserOpHelper {
         bytes memory initializer = abi.encodeWithSignature(
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
-        address walletAddress1 = soulWalletFactory.getWalletAddress(initializer, salt);
-        address walletAddress2 = soulWalletFactory.createWallet(initializer, salt);
+        address walletAddress1 = elytroFactory.getWalletAddress(initializer, salt);
+        address walletAddress2 = elytroFactory.createWallet(initializer, salt);
         require(walletAddress1 == walletAddress2, "walletAddress1 != walletAddress2");
     }
     // test return the wallet account address even if it has already been created
@@ -54,10 +54,10 @@ contract SoulWalletFactoryTest is Test, UserOpHelper {
         bytes memory initializer = abi.encodeWithSignature(
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
-        address walletAddress1 = soulWalletFactory.getWalletAddress(initializer, salt);
-        address walletAddress2 = soulWalletFactory.createWallet(initializer, salt);
+        address walletAddress1 = elytroFactory.getWalletAddress(initializer, salt);
+        address walletAddress2 = elytroFactory.createWallet(initializer, salt);
         require(walletAddress1 == walletAddress2, "walletAddress1 != walletAddress2");
-        address walletAddress3 = soulWalletFactory.createWallet(initializer, salt);
+        address walletAddress3 = elytroFactory.createWallet(initializer, salt);
         require(walletAddress3 == walletAddress2, "walletAddress3 != walletAddress2");
     }
 }

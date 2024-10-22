@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "../interfaces/ISocialRecovery.sol";
-import "../../../interfaces/ISoulWallet.sol";
+import "../../../interfaces/IElytro.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -209,8 +209,8 @@ abstract contract BaseSocialRecovery is ISocialRecovery, EIP712 {
     }
 
     function _recoveryOwner(address wallet, bytes32[] memory newOwners) internal {
-        ISoulWallet soulwallet = ISoulWallet(payable(wallet));
-        soulwallet.resetOwners(newOwners);
+        IElytro elytro = IElytro(payable(wallet));
+        elytro.resetOwners(newOwners);
     }
 
     /**

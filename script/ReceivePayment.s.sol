@@ -8,7 +8,7 @@ import "@source/dev/ReceivePayment.sol";
 contract ReceivePaymentDeployer is Script, DeployHelper {
     address paymasterOwner;
     uint256 paymasterOwnerPrivateKey;
-    address soulwalletFactory;
+    address elytroFactory;
 
     function run() public {
         vm.startBroadcast(privateKey);

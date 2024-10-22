@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "@source/factory/SoulWalletFactory.sol";
-import "@source/SoulWallet.sol";
+import "@source/factory/ElytroFactory.sol";
+import "@source/Elytro.sol";
 import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
 import {UserOperationLib} from "@account-abstraction/contracts/core/UserOperationLib.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -29,11 +29,11 @@ contract CreateWalletEntryPointPaymaster is Script {
     uint256 guardianPrivateKey;
 
     address defaultCallbackHandler;
-    address soulWalletDefaultValidator;
+    address elytroDefaultValidator;
 
-    SoulWalletFactory soulwalletFactory;
+    ElytroFactory elytroFactory;
 
-    address payable soulwalletAddress;
+    address payable elytroAddress;
 
     bytes emptyBytes;
     EntryPoint public entryPoint = EntryPoint(payable(0x0000000071727De22E5E9d8BAf0edAc6f37da032));
@@ -63,11 +63,11 @@ contract CreateWalletEntryPointPaymaster is Script {
         bytes memory initializer = abi.encodeWithSignature(
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
-        soulwalletFactory = SoulWalletFactory(loadEnvContract("SoulwalletFactory"));
-        address cacluatedAddress = soulwalletFactory.getWalletAddress(initializer, salt);
+        elytroFactory = ElytroFactory(loadEnvContract("ElytroFactory"));
+        address cacluatedAddress = elytroFactory.getWalletAddress(initializer, salt);
 
-        bytes memory soulWalletFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
-        bytes memory initCode = abi.encodePacked(address(soulwalletFactory), soulWalletFactoryCall);
+        bytes memory elytroFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
+        bytes memory initCode = abi.encodePacked(address(elytroFactory), elytroFactoryCall);
         console.log("cacluatedAddress", cacluatedAddress);
 
         address payToken = loadEnvContract("PAYTOKEN_ADDRESS");
@@ -97,7 +97,7 @@ contract CreateWalletEntryPointPaymaster is Script {
             maxPriorityFeePerGas: 10000,
             paymasterAndData: paymasterAndData
         });
-        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, soulWalletDefaultValidator);
+        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, elytroDefaultValidator);
 
         ops[0] = userOperation;
 

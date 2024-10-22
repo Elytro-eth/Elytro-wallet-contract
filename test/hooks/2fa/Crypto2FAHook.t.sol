@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../../soulwallet/base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import "../../elytro/base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import {Crypto2FAHook} from "@source/hooks/2fa/Crypto2FAHook.sol";
 import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
 import {UserOpHelper} from "../../helper/UserOpHelper.t.sol";
@@ -17,9 +17,9 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
 
-    SoulWalletInstence public soulWalletInstence;
-    SoulWalletDefaultValidator public soulWalletDefaultValidator;
-    ISoulWallet public soulWallet;
+    ElytroInstence public elytroInstence;
+    ElytroDefaultValidator public elytroDefaultValidator;
+    IElytro public elytro;
     address public walletOwner;
     uint256 public walletOwnerPrivateKey;
 
@@ -43,12 +43,11 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
 
         bytes32[] memory owners = new bytes32[](1);
         owners[0] = walletOwner.toBytes32();
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
+        elytroDefaultValidator = new ElytroDefaultValidator();
         bytes32 salt = bytes32(0);
-        soulWalletInstence =
-            new SoulWalletInstence(address(0), address(soulWalletDefaultValidator), owners, modules, hooks, salt);
-        soulWallet = soulWalletInstence.soulWallet();
-        (address[] memory preIsValidSignatureHooks, address[] memory preUserOpValidationHooks) = soulWallet.listHook();
+        elytroInstence = new ElytroInstence(address(0), address(elytroDefaultValidator), owners, modules, hooks, salt);
+        elytro = elytroInstence.elytro();
+        (address[] memory preIsValidSignatureHooks, address[] memory preUserOpValidationHooks) = elytro.listHook();
         assertEq(preIsValidSignatureHooks.length, 1, "preIsValidSignatureHooks length error");
         assertEq(preUserOpValidationHooks.length, 1, "preUserOpValidationHooks length error");
         assertEq(preIsValidSignatureHooks[0], address(crypto2FAHook), "preIsValidSignatureHooks address error");
@@ -56,7 +55,7 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
     }
 
     function test_hook() public {
-        vm.deal(address(soulWallet), 1000 ether);
+        vm.deal(address(elytro), 1000 ether);
         uint256 nonce = 0;
         bytes memory initCode;
         bytes memory callData;
@@ -75,7 +74,7 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
             maxPriorityFeePerGas = 100 gwei;
         }
         PackedUserOperation memory userOperation = UserOperationHelper.newUserOp({
-            sender: address(soulWallet),
+            sender: address(elytro),
             nonce: nonce,
             initCode: initCode,
             callData: callData,
@@ -86,7 +85,7 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
             maxPriorityFeePerGas: maxPriorityFeePerGas,
             paymasterAndData: paymasterAndData
         });
-        bytes32 hookSignHash = soulWalletInstence.entryPoint().getUserOpHash(userOperation);
+        bytes32 hookSignHash = elytroInstence.entryPoint().getUserOpHash(userOperation);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wallet2faOwnerPrivateKey, hookSignHash.toEthSignedMessageHash());
         bytes memory hookSignatureData = abi.encodePacked(r, s, v);
         bytes4 hookSignatureLength = bytes4(uint32(hookSignatureData.length));
@@ -95,18 +94,18 @@ contract Crypto2FAHookTest is Test, UserOpHelper {
         vm.startBroadcast(wallet2faOwnerPrivateKey);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         userOperation.signature = signUserOp(
-            soulWalletInstence.entryPoint(),
+            elytroInstence.entryPoint(),
             userOperation,
             walletOwnerPrivateKey,
-            address(soulWalletDefaultValidator),
+            address(elytroDefaultValidator),
             hookAndData
         );
         ops[0] = userOperation;
-        soulWalletInstence.entryPoint().handleOps(ops, payable(walletOwner));
+        elytroInstence.entryPoint().handleOps(ops, payable(walletOwner));
     }
 
     function test_applyChange2faWithoutInitiateChange2FA() public {
-        vm.startPrank(address(soulWallet));
+        vm.startPrank(address(elytro));
         vm.expectRevert("No pending change");
         crypto2FAHook.applyChange2FA();
     }

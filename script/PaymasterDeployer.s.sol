@@ -11,16 +11,16 @@ import "@source/paymaster/ERC20Paymaster.sol";
 contract PaymasterDeployer is Script, DeployHelper {
     address paymasterOwner;
     uint256 paymasterOwnerPrivateKey;
-    address soulwalletFactory;
+    address elytroFactory;
 
     function run() public {
         paymasterOwnerPrivateKey = vm.envUint("PAYMASTER_OWNER_PRIVATE_KEY");
         require(paymasterOwnerPrivateKey != 0, "PAYMASTER_OWNER_PRIVATE_KEY not provided");
         paymasterOwner = vm.addr(paymasterOwnerPrivateKey);
         require(paymasterOwner != address(0), "PAYMASTER_OWNER_ADDRESS not provided");
-        soulwalletFactory = vm.envAddress("SOULWALLET_FACTORY_ADDRESS");
-        require(soulwalletFactory != address(0), "SOULWALLET_FACTORY_ADDRESS not provided");
-        require(address(soulwalletFactory).code.length > 0, "soulwalletFactory needs be deployed");
+        elytroFactory = vm.envAddress("ELYTRO_FACTORY_ADDRESS");
+        require(elytroFactory != address(0), "ELYTRO_FACTORY_ADDRESS not provided");
+        require(address(elytroFactory).code.length > 0, "elytroFactory needs be deployed");
         vm.startBroadcast(privateKey);
 
         Network network = getNetwork();
@@ -77,7 +77,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         address[] memory tokens = new address[](1);
@@ -100,7 +100,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         address[] memory tokens = new address[](1);
@@ -129,7 +129,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         address[] memory tokens = new address[](1);
@@ -158,7 +158,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         vm.stopBroadcast();
@@ -172,7 +172,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         vm.stopBroadcast();
@@ -186,7 +186,7 @@ contract PaymasterDeployer is Script, DeployHelper {
         address paymaster = deploy(
             "Paymaster",
             bytes.concat(
-                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, soulwalletFactory)
+                type(ERC20Paymaster).creationCode, abi.encode(ENTRYPOINT_ADDRESS, paymasterOwner, elytroFactory)
             )
         );
         vm.stopBroadcast();

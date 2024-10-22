@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
-import "@source/factory/SoulWalletFactory.sol";
+import "@source/factory/ElytroFactory.sol";
 import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -27,9 +27,9 @@ contract CreateWalletEntryPoint is Script {
     uint256 guardianPrivateKey;
 
     address defaultCallbackHandler;
-    address soulWalletDefaultValidator;
+    address elytroDefaultValidator;
 
-    SoulWalletFactory soulwalletFactory;
+    ElytroFactory elytroFactory;
 
     bytes emptyBytes;
     EntryPoint public entryPoint = EntryPoint(payable(0x0000000071727De22E5E9d8BAf0edAc6f37da032));
@@ -38,7 +38,7 @@ contract CreateWalletEntryPoint is Script {
         Solenv.config(".env_backend");
         // wallet signer info
         walletSingerPrivateKey = vm.envUint("WALLET_SIGNGER_NEW_PRIVATE_KEY");
-        soulWalletDefaultValidator = loadEnvContract("SoulWalletDefaultValidator");
+        elytroDefaultValidator = loadEnvContract("ElytroDefaultValidator");
         walletSigner = vm.addr(walletSingerPrivateKey);
 
         // guardian info
@@ -62,17 +62,17 @@ contract CreateWalletEntryPoint is Script {
         bytes memory initializer = abi.encodeWithSignature(
             "initialize(bytes32[],address,bytes[],bytes[])", owners, defaultCallbackHandler, modules, hooks
         );
-        soulwalletFactory = SoulWalletFactory(loadEnvContract("SoulwalletFactory"));
-        address cacluatedAddress = soulwalletFactory.getWalletAddress(initializer, salt);
+        elytroFactory = ElytroFactory(loadEnvContract("ElytroFactory"));
+        address cacluatedAddress = elytroFactory.getWalletAddress(initializer, salt);
 
-        bytes memory soulWalletFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
-        bytes memory initCode = abi.encodePacked(address(soulwalletFactory), soulWalletFactoryCall);
+        bytes memory elytroFactoryCall = abi.encodeWithSignature("createWallet(bytes,bytes32)", initializer, salt);
+        bytes memory initCode = abi.encodePacked(address(elytroFactory), elytroFactoryCall);
         console.log("cacluatedAddress", cacluatedAddress);
 
         entryPoint.depositTo{value: 0.005 ether}(cacluatedAddress);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
 
-        address aaveUsdcAutomationAddress = loadEnvContract("SOUL_WALLET_AAVE_USDC_AUTOMATION_BASE_SEPOLIA");
+        address aaveUsdcAutomationAddress = loadEnvContract("ELYTRO_AAVE_USDC_AUTOMATION_BASE_SEPOLIA");
         bytes memory approveData =
             abi.encodeWithSignature("approve(address,uint256)", aaveUsdcAutomationAddress, 10000 ether);
         address usdcAddress = loadEnvContract("USDC_BASE");
@@ -89,7 +89,7 @@ contract CreateWalletEntryPoint is Script {
             maxPriorityFeePerGas: 10000,
             paymasterAndData: hex""
         });
-        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, soulWalletDefaultValidator);
+        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, elytroDefaultValidator);
         logUserOp(userOperation);
 
         ops[0] = userOperation;
@@ -128,7 +128,7 @@ contract CreateWalletEntryPoint is Script {
             maxPriorityFeePerGas: 10000,
             paymasterAndData: hex""
         });
-        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, soulWalletDefaultValidator);
+        userOperation.signature = signUserOp(userOperation, walletSingerPrivateKey, elytroDefaultValidator);
         logUserOp(userOperation);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
 

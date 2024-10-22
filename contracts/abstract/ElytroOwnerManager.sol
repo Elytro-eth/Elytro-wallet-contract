@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import {OwnerManager} from "@soulwallet-core/contracts/base/OwnerManager.sol";
-import {ISoulWalletOwnerManager} from "../interfaces/ISoulWalletOwnerManager.sol";
+import {IElytroOwnerManager} from "../interfaces/IElytroOwnerManager.sol";
 
-abstract contract SoulWalletOwnerManager is ISoulWalletOwnerManager, OwnerManager {
+abstract contract ElytroOwnerManager is IElytroOwnerManager, OwnerManager {
     function _addOwners(bytes32[] calldata owners) internal {
         for (uint256 i = 0; i < owners.length;) {
             _addOwner(owners[i]);

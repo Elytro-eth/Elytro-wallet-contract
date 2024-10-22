@@ -2,8 +2,8 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "@source/modules/socialRecovery/SocialRecoveryModule.sol";
-import "../../soulwallet/base/SoulWalletInstence.sol";
-import {SoulWalletDefaultValidator} from "@source/validator/SoulWalletDefaultValidator.sol";
+import "../../elytro/base/ElytroInstence.sol";
+import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import {UserOperationHelper} from "@soulwallet-core/test/dev/userOperationHelper.sol";
 import {Execution} from "@soulwallet-core/contracts/interface/IStandardExecutor.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
@@ -19,9 +19,9 @@ contract SocialRecoveryModuleTest is Test {
     }
 
     SocialRecoveryModule socialRecoveryModule;
-    SoulWalletInstence public soulWalletInstence;
-    SoulWalletDefaultValidator public soulWalletDefaultValidator;
-    ISoulWallet soulWallet;
+    ElytroInstence public elytroInstence;
+    ElytroDefaultValidator public elytroDefaultValidator;
+    IElytro elytro;
     GuardianData guarianData;
     address _owner;
     uint256 _ownerPrivateKey;
@@ -51,7 +51,7 @@ contract SocialRecoveryModuleTest is Test {
                 address(socialRecoveryModule)
             )
         );
-        soulWalletDefaultValidator = new SoulWalletDefaultValidator();
+        elytroDefaultValidator = new ElytroDefaultValidator();
     }
 
     function deployWallet() private {
@@ -72,12 +72,11 @@ contract SocialRecoveryModuleTest is Test {
         bytes memory socialRecoveryInitData = abi.encode(guardianHash, delayTime);
         modules[0] = abi.encodePacked(socialRecoveryModule, socialRecoveryInitData);
         bytes32 salt = bytes32(0);
-        soulWalletInstence =
-            new SoulWalletInstence(address(0), address(soulWalletDefaultValidator), owners, modules, hooks, salt);
-        soulWallet = soulWalletInstence.soulWallet();
-        assertEq(soulWallet.isOwner(_owner.toBytes32()), true);
-        assertEq(soulWallet.isOwner(_newOwner.toBytes32()), false);
-        assertEq(soulWallet.isInstalledModule(address(socialRecoveryModule)), true);
+        elytroInstence = new ElytroInstence(address(0), address(elytroDefaultValidator), owners, modules, hooks, salt);
+        elytro = elytroInstence.elytro();
+        assertEq(elytro.isOwner(_owner.toBytes32()), true);
+        assertEq(elytro.isOwner(_newOwner.toBytes32()), false);
+        assertEq(elytro.isInstalledModule(address(socialRecoveryModule)), true);
     }
 
     function deployGuardianDataZeroWallet() private {
@@ -97,12 +96,11 @@ contract SocialRecoveryModuleTest is Test {
         bytes memory socialRecoveryInitData = abi.encode(guardianHash, delayTime);
         modules[0] = abi.encodePacked(socialRecoveryModule, socialRecoveryInitData);
         bytes32 salt = bytes32(0);
-        soulWalletInstence =
-            new SoulWalletInstence(address(0), address(soulWalletDefaultValidator), owners, modules, hooks, salt);
-        soulWallet = soulWalletInstence.soulWallet();
-        assertEq(soulWallet.isOwner(_owner.toBytes32()), true);
-        assertEq(soulWallet.isOwner(_newOwner.toBytes32()), false);
-        assertEq(soulWallet.isInstalledModule(address(socialRecoveryModule)), true);
+        elytroInstence = new ElytroInstence(address(0), address(elytroDefaultValidator), owners, modules, hooks, salt);
+        elytro = elytroInstence.elytro();
+        assertEq(elytro.isOwner(_owner.toBytes32()), true);
+        assertEq(elytro.isOwner(_newOwner.toBytes32()), false);
+        assertEq(elytro.isInstalledModule(address(socialRecoveryModule)), true);
     }
 
     function test_deployWalletWithSocialRecoveryModule() public {
@@ -124,12 +122,12 @@ contract SocialRecoveryModuleTest is Test {
         )
     {
         deployWallet();
-        uint256 nonce = socialRecoveryModule.walletNonce(address(soulWallet));
+        uint256 nonce = socialRecoveryModule.walletNonce(address(elytro));
         bytes32[] memory newOwners = new bytes32[](1);
         newOwners[0] = address(_newOwner).toBytes32();
 
         bytes32 structHash = keccak256(
-            abi.encode(_TYPE_HASH_SOCIAL_RECOVERY, address(soulWallet), nonce, keccak256(abi.encodePacked(newOwners)))
+            abi.encode(_TYPE_HASH_SOCIAL_RECOVERY, address(elytro), nonce, keccak256(abi.encodePacked(newOwners)))
         );
 
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
@@ -142,13 +140,13 @@ contract SocialRecoveryModuleTest is Test {
         console.logBytes(abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt));
 
         recoveryId = socialRecoveryModule.scheduleRecovery(
-            address(soulWallet),
+            address(elytro),
             newOwners,
             abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt),
             guardianSig
         );
         return (
-            address(soulWallet),
+            address(elytro),
             newOwners,
             abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt),
             guardianSig,
@@ -163,8 +161,8 @@ contract SocialRecoveryModuleTest is Test {
         (guardianSignature);
         vm.warp(block.timestamp + delayTime);
         socialRecoveryModule.executeRecovery(wallet, newOwners);
-        assertEq(soulWallet.isOwner(_newOwner.toBytes32()), true);
-        assertEq(soulWallet.isOwner(_owner.toBytes32()), false);
+        assertEq(elytro.isOwner(_newOwner.toBytes32()), true);
+        assertEq(elytro.isOwner(_owner.toBytes32()), false);
     }
 
     function test_executeSocialRecoveryNotInReadyState() public {
@@ -174,8 +172,8 @@ contract SocialRecoveryModuleTest is Test {
         (guardianSignature);
         vm.expectRevert();
         socialRecoveryModule.executeRecovery(wallet, newOwners);
-        assertEq(soulWallet.isOwner(_newOwner.toBytes32()), false);
-        assertEq(soulWallet.isOwner(_owner.toBytes32()), true);
+        assertEq(elytro.isOwner(_newOwner.toBytes32()), false);
+        assertEq(elytro.isOwner(_owner.toBytes32()), true);
     }
 
     function test_cancelSocialRecovery() public {
@@ -189,7 +187,7 @@ contract SocialRecoveryModuleTest is Test {
         (rawGuardian);
         (guardianSignature);
         (recoveryId);
-        soulWalletInstence.entryPoint().depositTo{value: 5 ether}(address(soulWallet));
+        elytroInstence.entryPoint().depositTo{value: 5 ether}(address(elytro));
         vm.startBroadcast(_ownerPrivateKey);
         Execution[] memory executions = new Execution[](1);
         executions[0].target = address(socialRecoveryModule);
@@ -199,7 +197,7 @@ contract SocialRecoveryModuleTest is Test {
         bytes memory callData = abi.encodeWithSignature("executeBatch((address,uint256,bytes)[])", executions);
 
         PackedUserOperation memory userOperation = UserOperationHelper.newUserOp({
-            sender: address(soulWallet),
+            sender: address(elytro),
             nonce: 0,
             initCode: hex"",
             callData: callData,
@@ -210,17 +208,17 @@ contract SocialRecoveryModuleTest is Test {
             maxPriorityFeePerGas: 10000,
             paymasterAndData: hex""
         });
-        userOperation.signature = signUserOp(userOperation, _ownerPrivateKey, address(soulWalletDefaultValidator));
+        userOperation.signature = signUserOp(userOperation, _ownerPrivateKey, address(elytroDefaultValidator));
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
 
         ops[0] = userOperation;
 
-        soulWalletInstence.entryPoint().handleOps(ops, payable(_owner));
+        elytroInstence.entryPoint().handleOps(ops, payable(_owner));
         vm.warp(block.timestamp + delayTime);
         vm.expectRevert();
         socialRecoveryModule.executeRecovery(wallet, newOwners);
-        assertEq(soulWallet.isOwner(_newOwner.toBytes32()), false);
-        assertEq(soulWallet.isOwner(_owner.toBytes32()), true);
+        assertEq(elytro.isOwner(_newOwner.toBytes32()), false);
+        assertEq(elytro.isOwner(_owner.toBytes32()), true);
     }
 
     function signUserOp(PackedUserOperation memory op, uint256 _key, address _validator)
@@ -228,7 +226,7 @@ contract SocialRecoveryModuleTest is Test {
         view
         returns (bytes memory signature)
     {
-        bytes32 hash = soulWalletInstence.entryPoint().getUserOpHash(op);
+        bytes32 hash = elytroInstence.entryPoint().getUserOpHash(op);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_key, hash.toEthSignedMessageHash());
         bytes memory opSig;
         bytes memory signatureData = abi.encodePacked(r, s, v);
@@ -240,12 +238,12 @@ contract SocialRecoveryModuleTest is Test {
 
     function test_reuseNonceRecovery() public {
         deployWallet();
-        uint256 nonce = socialRecoveryModule.walletNonce(address(soulWallet));
+        uint256 nonce = socialRecoveryModule.walletNonce(address(elytro));
         bytes32[] memory newOwners = new bytes32[](1);
         newOwners[0] = address(_newOwner).toBytes32();
 
         bytes32 structHash = keccak256(
-            abi.encode(_TYPE_HASH_SOCIAL_RECOVERY, address(soulWallet), nonce, keccak256(abi.encodePacked(newOwners)))
+            abi.encode(_TYPE_HASH_SOCIAL_RECOVERY, address(elytro), nonce, keccak256(abi.encodePacked(newOwners)))
         );
 
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
@@ -258,14 +256,14 @@ contract SocialRecoveryModuleTest is Test {
         console.logBytes(abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt));
 
         socialRecoveryModule.scheduleRecovery(
-            address(soulWallet),
+            address(elytro),
             newOwners,
             abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt),
             guardianSig
         );
         vm.expectRevert();
         socialRecoveryModule.scheduleRecovery(
-            address(soulWallet),
+            address(elytro),
             newOwners,
             abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt),
             guardianSig
@@ -274,13 +272,13 @@ contract SocialRecoveryModuleTest is Test {
 
     function test_guardianDataZeroWallet() public {
         deployGuardianDataZeroWallet();
-        socialRecoveryModule.walletNonce(address(soulWallet));
+        socialRecoveryModule.walletNonce(address(elytro));
         bytes32[] memory newOwners = new bytes32[](1);
         newOwners[0] = address(_newOwner).toBytes32();
         bytes memory guardianSig = abi.encodePacked("1");
         vm.expectRevert();
         socialRecoveryModule.scheduleRecovery(
-            address(soulWallet),
+            address(elytro),
             newOwners,
             abi.encode(guarianData.guardians, guarianData.threshold, guarianData.salt),
             guardianSig

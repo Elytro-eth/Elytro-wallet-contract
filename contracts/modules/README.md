@@ -1,6 +1,6 @@
 # Module Introduction
 
-SoulWallet modules introduce customizable features to SoulWallet contracts. They are smart contracts designed to extend the functionality of SoulWallet, while keeping module logic distinct from the core contracts of SoulWallet. A basic SoulWallet operates independently of any modules, which are optional and intended to enhance functionality based on user needs.
+Elytro modules introduce customizable features to Elytro contracts. They are smart contracts designed to extend the functionality of Elytro, while keeping module logic distinct from the core contracts of Elytro. A basic Elytro operates independently of any modules, which are optional and intended to enhance functionality based on user needs.
 
 ## Implement new Module
 
@@ -31,10 +31,10 @@ contract NewModule is BaseModule {
 ```
 
 - **requiredFunctions**
-  The requiredFunctions feature mandates that modules explicitly declare which SoulWallet core functions they need to access, akin to how Android apps request specific permissions. This mechanism ensures security and transparency by allowing modules to only interact with the necessary parts of the SoulWallet, minimizing potential security risks. For example, a module managing daily spending cannot access owner management functions, embodying the principle of least privilege and risk isolation. This design requires developers to clearly outline their module's intended interactions with SoulWallet upon integration, fostering a secure modular environment.
+  The requiredFunctions feature mandates that modules explicitly declare which Elytro core functions they need to access, akin to how Android apps request specific permissions. This mechanism ensures security and transparency by allowing modules to only interact with the necessary parts of the Elytro, minimizing potential security risks. For example, a module managing daily spending cannot access owner management functions, embodying the principle of least privilege and risk isolation. This design requires developers to clearly outline their module's intended interactions with Elytro upon integration, fostering a secure modular environment.
 - **\_init**
-  The \_init function is only triggered by SoulWallet during a module's addition, it facilitates the initial setup and configuration of the module.
+  The \_init function is only triggered by Elytro during a module's addition, it facilitates the initial setup and configuration of the module.
 - **\_deInit**
-  The \_deInit function is called upon module removal from SoulWallet, enabling the cleanup of related data.
+  The \_deInit function is called upon module removal from Elytro, enabling the cleanup of related data.
 
 ![module pic](readmepic/module.png)

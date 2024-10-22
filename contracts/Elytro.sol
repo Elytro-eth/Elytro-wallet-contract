@@ -11,30 +11,30 @@ import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {Errors} from "./libraries/Errors.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./abstract/ERC1271Handler.sol";
-import {SoulWalletOwnerManager} from "./abstract/SoulWalletOwnerManager.sol";
-import {SoulWalletModuleManager} from "./abstract/SoulWalletModuleManager.sol";
-import {SoulWalletHookManager} from "./abstract/SoulWalletHookManager.sol";
-import {SoulWalletUpgradeManager} from "./abstract/SoulWalletUpgradeManager.sol";
+import {ElytroOwnerManager} from "./abstract/ElytroOwnerManager.sol";
+import {ElytroModuleManager} from "./abstract/ElytroModuleManager.sol";
+import {ElytroHookManager} from "./abstract/ElytroHookManager.sol";
+import {ElytroUpgradeManager} from "./abstract/ElytroUpgradeManager.sol";
 
 /**
- * @title SoulWallet
- * @dev This contract is the main entry point for the SoulWallet. It implements the IAccount and IERC1271 interfaces,
+ * @title Elytro
+ * @dev This contract is the main entry point for the Elytro. It implements the IAccount and IERC1271 interfaces,
  * and is compatible with the ERC-4337 standard.
  * It inherits from multiple base contracts and managers to provide the core functionality of the wallet.
  * This includes managing entry points, owners, modules, hooks, and upgrades, as well as handling ERC1271 signatures and providing a fallback function.
  */
-contract SoulWallet is
+contract Elytro is
     Initializable,
     IAccount,
     IERC1271,
     EntryPointManager,
-    SoulWalletOwnerManager,
-    SoulWalletModuleManager,
-    SoulWalletHookManager,
+    ElytroOwnerManager,
+    ElytroModuleManager,
+    ElytroHookManager,
     StandardExecutor,
     ValidatorManager,
     FallbackManager,
-    SoulWalletUpgradeManager,
+    ElytroUpgradeManager,
     ERC1271Handler
 {
     string public constant VERSION = "1.1.0";
@@ -46,7 +46,7 @@ contract SoulWallet is
     }
 
     /**
-     * @notice Initializes the SoulWallet contract
+     * @notice Initializes the Elytro contract
      * @dev This function can only be called once. It sets the initial owners, default callback handler, modules, and hooks.
      */
     function initialize(
