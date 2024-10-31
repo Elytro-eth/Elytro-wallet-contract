@@ -252,10 +252,10 @@ contract DailyLimitHookTest is Test, UserOpHelper {
 
         // First day transactions
         _executeERC20Transaction(0.5 ether, false);
+        vm.warp(block.timestamp + 12 hours);
         _executeERC20Transaction(0.4 ether, false);
-
         // Move to next day
-        vm.warp(block.timestamp + 24 hours);
+        vm.warp(block.timestamp + 13 hours);
 
         // Should work as limit is reset
         _executeERC20Transaction(0.5 ether, false);
@@ -371,9 +371,204 @@ contract DailyLimitHookTest is Test, UserOpHelper {
     }
 
     function returnDummyHookAndData() private view returns (bytes memory) {
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(0x1, bytes32(0));
-        bytes memory hookSignatureData = abi.encodePacked(r, s, v);
-        bytes4 hookSignatureLength = bytes4(uint32(hookSignatureData.length));
-        return abi.encodePacked(address(dailyLimitHook), hookSignatureLength, hookSignatureData);
+        // just using dummy data for placeholder
+        bytes memory hookData = hex"aa";
+        bytes4 hookSignatureLength = bytes4(uint32(hookData.length));
+        return abi.encodePacked(address(dailyLimitHook), hookSignatureLength, hookData);
+    }
+
+    function test_initiateAndApplyLimitChange() public {
+        // Test initiating and applying a limit change
+        uint256 newLimit = 2 ether;
+
+        // Initiate limit change
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), newLimit);
+
+        // Check pending limit
+        (uint256 pendingLimit, uint256 effectiveTime) =
+            dailyLimitHook.getPendingLimit(address(elytro), address(testLimitToken));
+        assertEq(pendingLimit, newLimit);
+        assertEq(effectiveTime, block.timestamp + 1 days);
+
+        // Move time forward past the time lock
+        vm.warp(block.timestamp + 1 days + 1);
+
+        // Apply the limit change
+        vm.prank(address(elytro));
+        dailyLimitHook.applySetLimit(address(testLimitToken));
+
+        // Verify new limit is set
+        uint256 currentLimit = dailyLimitHook.getCurrentLimit(address(elytro), address(testLimitToken));
+        assertEq(currentLimit, newLimit);
+    }
+
+    function test_cancelLimitChange() public {
+        uint256 newLimit = 2 ether;
+        uint256 originalLimit = dailyLimitHook.getCurrentLimit(address(elytro), address(testLimitToken));
+
+        // Initiate limit change
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), newLimit);
+
+        // Cancel the change
+        vm.prank(address(elytro));
+        dailyLimitHook.cancelSetLimit(address(testLimitToken));
+
+        // Verify limit remains unchanged
+        uint256 currentLimit = dailyLimitHook.getCurrentLimit(address(elytro), address(testLimitToken));
+        assertEq(currentLimit, originalLimit);
+
+        // Verify pending change is cleared
+        (uint256 pendingLimit, uint256 effectiveTime) =
+            dailyLimitHook.getPendingLimit(address(elytro), address(testLimitToken));
+        assertEq(pendingLimit, 0);
+        assertEq(effectiveTime, 0);
+    }
+
+    function test_cannotApplyLimitBeforeTimelock() public {
+        uint256 newLimit = 2 ether;
+
+        // Initiate limit change
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), newLimit);
+
+        // Try to apply before timelock expires
+        vm.warp(block.timestamp + 1 days - 1);
+        vm.prank(address(elytro));
+        vm.expectRevert("Time lock not expired");
+        dailyLimitHook.applySetLimit(address(testLimitToken));
+    }
+
+    function test_cannotCancelAfterTimelock() public {
+        uint256 newLimit = 2 ether;
+
+        // Initiate limit change
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), newLimit);
+
+        // Move time forward past the time lock
+        vm.warp(block.timestamp + 1 days + 1);
+
+        // Try to cancel after timelock expires
+        vm.prank(address(elytro));
+        vm.expectRevert("Change already effective");
+        dailyLimitHook.cancelSetLimit(address(testLimitToken));
+    }
+
+    function test_cannotSetZeroLimit() public {
+        // Try to set zero limit
+        vm.prank(address(elytro));
+        vm.expectRevert("newLimit must be greater than 0");
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), 0);
+    }
+
+    function test_spendingWithNewLimit() public {
+        uint256 newLimit = 2 ether;
+
+        // Initiate and apply new limit
+        vm.startPrank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(testLimitToken), newLimit);
+        vm.warp(block.timestamp + 1 days + 1);
+        dailyLimitHook.applySetLimit(address(testLimitToken));
+        vm.stopPrank();
+
+        // Test spending with new limit
+        vm.deal(address(elytro), 1000 ether);
+        testLimitToken.sudoMint(address(elytro), 1000 ether);
+
+        // Should succeed with 1.5 ether (was impossible with old limit)
+        _executeERC20Transaction(1.5 ether, false);
+
+        // Should fail with amount over new limit
+        _executeERC20Transaction(2.5 ether, true);
+    }
+
+    function test_newTokenLimitNoTimelock() public {
+        TokenERC20 newToken = new TokenERC20(18);
+        uint256 newLimit = 2 ether;
+
+        // Set limit for new token
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(newToken), newLimit);
+
+        // Verify limit is set immediately
+        uint256 currentLimit = dailyLimitHook.getCurrentLimit(address(elytro), address(newToken));
+        assertEq(currentLimit, newLimit);
+
+        // Verify no pending change
+        (uint256 pendingLimit, uint256 effectiveTime) =
+            dailyLimitHook.getPendingLimit(address(elytro), address(newToken));
+        assertEq(pendingLimit, 0);
+        assertEq(effectiveTime, 0);
+    }
+
+    function test_newTokenSpendingWithImmediateLimit() public {
+        // Setup new token
+        TokenERC20 newToken = new TokenERC20(18);
+        uint256 newLimit = 2 ether;
+        vm.deal(address(elytro), 1000 ether);
+        newToken.sudoMint(address(elytro), 1000 ether);
+
+        // Set limit for new token
+        vm.prank(address(elytro));
+        dailyLimitHook.initiateSetLimit(address(newToken), newLimit);
+
+        // Should be able to spend immediately under the new limit
+        bytes memory callData = abi.encodeWithSelector(
+            IStandardExecutor.execute.selector,
+            address(newToken),
+            0,
+            abi.encodeWithSelector(IERC20.transfer.selector, address(10), 1.5 ether)
+        );
+
+        PackedUserOperation memory userOperation = UserOperationHelper.newUserOp({
+            sender: address(elytro),
+            nonce: testEntryPoint.getNonce(address(elytro), 0),
+            initCode: "",
+            callData: callData,
+            callGasLimit: 900000,
+            verificationGasLimit: 1000000,
+            preVerificationGas: 300000,
+            maxFeePerGas: 100 gwei,
+            maxPriorityFeePerGas: 100 gwei,
+            paymasterAndData: ""
+        });
+
+        bytes memory hookAndData = returnDummyHookAndData();
+        PackedUserOperation[] memory ops = new PackedUserOperation[](1);
+        userOperation.signature = signUserOp(
+            testEntryPoint, userOperation, walletOwnerPrivateKey, address(elytroDefaultValidator), hookAndData
+        );
+        ops[0] = userOperation;
+        testEntryPoint.handleOps(ops, payable(walletOwner));
+
+        // Should fail when trying to spend over the new limit
+        callData = abi.encodeWithSelector(
+            IStandardExecutor.execute.selector,
+            address(newToken),
+            0,
+            abi.encodeWithSelector(IERC20.transfer.selector, address(10), 2.5 ether)
+        );
+
+        userOperation = UserOperationHelper.newUserOp({
+            sender: address(elytro),
+            nonce: testEntryPoint.getNonce(address(elytro), 0),
+            initCode: "",
+            callData: callData,
+            callGasLimit: 900000,
+            verificationGasLimit: 1000000,
+            preVerificationGas: 300000,
+            maxFeePerGas: 100 gwei,
+            maxPriorityFeePerGas: 100 gwei,
+            paymasterAndData: ""
+        });
+
+        ops[0] = userOperation;
+        ops[0].signature = signUserOp(
+            testEntryPoint, userOperation, walletOwnerPrivateKey, address(elytroDefaultValidator), hookAndData
+        );
+        vm.expectRevert();
+        testEntryPoint.handleOps(ops, payable(walletOwner));
     }
 }

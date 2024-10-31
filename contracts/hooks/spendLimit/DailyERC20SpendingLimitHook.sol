@@ -9,7 +9,7 @@ import {console} from "forge-std/console.sol";
 contract DailyERC20SpendingLimitHook is IHook {
     uint256 public constant TIME_LOCK_DURATION = 1 days;
     uint256 private constant ONE_DAY = 1 days;
-    address private constant _ETH_TOKEN_ADDRESS = address(2);
+    address private constant ETH_TOKEN_ADDRESS = address(2);
 
     struct PendingLimit {
         uint256 newLimit;
@@ -74,8 +74,7 @@ contract DailyERC20SpendingLimitHook is IHook {
         (userOp, userOpHash, missingAccountFunds, hookSignature);
         bytes4 selector = bytes4(userOp.callData);
 
-        SpendingLimit storage limit = walletSpendingLimits[msg.sender];
-        require(limit.initialized, "not initialized");
+        require(walletSpendingLimits[msg.sender].initialized, "not initialized");
 
         if (IStandardExecutor.execute.selector == selector) {
             // function execute(address target, uint256 value, bytes calldata data)
@@ -101,7 +100,7 @@ contract DailyERC20SpendingLimitHook is IHook {
         returns (address token, uint256 spent)
     {
         if (value > 0) {
-            return (_ETH_TOKEN_ADDRESS, value);
+            return (ETH_TOKEN_ADDRESS, value);
         }
         bytes4 selector;
         assembly {
@@ -162,12 +161,6 @@ contract DailyERC20SpendingLimitHook is IHook {
             tokenLimit.lastResetTime = block.timestamp;
         }
 
-        // Reset daily spent if 24 hours have passed
-        if (block.timestamp >= tokenLimit.lastResetTime + ONE_DAY) {
-            tokenLimit.dailySpent = 0;
-            tokenLimit.lastResetTime = block.timestamp;
-        }
-
         // Check if the new spending would exceed the daily limit
         require(tokenLimit.dailySpent + spent <= tokenLimit.dailyLimit, "Daily spending limit exceeded");
 
@@ -180,14 +173,24 @@ contract DailyERC20SpendingLimitHook is IHook {
     }
 
     function initiateSetLimit(address token, uint256 newLimit) external {
+        require(newLimit > 0, "newLimit must be greater than 0");
         SpendingLimit storage limit = walletSpendingLimits[msg.sender];
         require(limit.initialized, "not initialized");
 
         TokenLimit storage tokenLimit = limit.tokenLimits[token];
-        tokenLimit.pendingLimit.newLimit = newLimit;
-        tokenLimit.pendingLimit.effectiveTime = block.timestamp + TIME_LOCK_DURATION;
 
-        emit LimitChangeInitiated(msg.sender, token, newLimit, tokenLimit.pendingLimit.effectiveTime);
+        // If token has no existing limit, set it immediately
+        if (tokenLimit.dailyLimit == 0) {
+            tokenLimit.dailyLimit = newLimit;
+            tokenLimit.lastResetTime = block.timestamp;
+            tokenLimit.dailySpent = 0;
+            emit LimitChanged(msg.sender, token, newLimit);
+        } else {
+            // For existing limits, use time-lock
+            tokenLimit.pendingLimit.newLimit = newLimit;
+            tokenLimit.pendingLimit.effectiveTime = block.timestamp + TIME_LOCK_DURATION;
+            emit LimitChangeInitiated(msg.sender, token, newLimit, tokenLimit.pendingLimit.effectiveTime);
+        }
     }
 
     function applySetLimit(address token) external {
@@ -195,6 +198,7 @@ contract DailyERC20SpendingLimitHook is IHook {
         require(limit.initialized, "not initialized");
 
         TokenLimit storage tokenLimit = limit.tokenLimits[token];
+        require(tokenLimit.dailyLimit > 0, "Token limit not initialized");
 
         require(tokenLimit.pendingLimit.effectiveTime > 0, "No pending change");
         require(block.timestamp >= tokenLimit.pendingLimit.effectiveTime, "Time lock not expired");
