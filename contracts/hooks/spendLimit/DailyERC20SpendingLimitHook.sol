@@ -220,7 +220,6 @@ contract DailyERC20SpendingLimitHook is IHook {
 
         TokenLimit storage tokenLimit = limit.tokenLimits[token];
         require(tokenLimit.pendingLimit.effectiveTime > 0, "No pending change");
-        require(block.timestamp < tokenLimit.pendingLimit.effectiveTime, "Change already effective");
 
         delete tokenLimit.pendingLimit;
 
