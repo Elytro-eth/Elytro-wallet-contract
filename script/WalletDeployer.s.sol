@@ -7,6 +7,7 @@ import "@source/Elytro.sol";
 import "@source/abstract/DefaultCallbackHandler.sol";
 import {ElytroDefaultValidator} from "@source/validator/ElytroDefaultValidator.sol";
 import {EntryPoint} from "@account-abstraction/contracts/core/EntryPoint.sol";
+import {ElytroInfoRecorder} from "@source/dev/ElytroInfoRecorder.sol";
 import "./DeployHelper.sol";
 
 contract WalletDeployer is Script, DeployHelper {
@@ -39,6 +40,10 @@ contract WalletDeployer is Script, DeployHelper {
         writeAddressToEnv("ELYTRO_FACTORY_ADDRESS", elytroFactoryAddress);
 
         deploy("DefaultCallbackHandler", type(DefaultCallbackHandler).creationCode);
+
+        // Deploy ElytroInfoRecorder
+        address elytroInfoRecorder = deploy("ElytroInfoRecorder", type(ElytroInfoRecorder).creationCode);
+        writeAddressToEnv("ELYTRO_INFO_RECORDER", elytroInfoRecorder);
     }
 
     function deployLocalEntryPoint() private {

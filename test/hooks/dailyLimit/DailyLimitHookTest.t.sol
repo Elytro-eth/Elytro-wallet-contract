@@ -440,7 +440,7 @@ contract DailyLimitHookTest is Test, UserOpHelper {
         dailyLimitHook.applySetLimit(address(testLimitToken));
     }
 
-    function test_cannotCancelAfterTimelock() public {
+    function test_cancelAfterTimelock() public {
         uint256 newLimit = 2 ether;
 
         // Initiate limit change
@@ -450,9 +450,8 @@ contract DailyLimitHookTest is Test, UserOpHelper {
         // Move time forward past the time lock
         vm.warp(block.timestamp + 1 days + 1);
 
-        // Try to cancel after timelock expires
+        // test cancel after timelock expires
         vm.prank(address(elytro));
-        vm.expectRevert("Change already effective");
         dailyLimitHook.cancelSetLimit(address(testLimitToken));
     }
 

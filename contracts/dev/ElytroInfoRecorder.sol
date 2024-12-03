@@ -4,6 +4,29 @@ pragma solidity ^0.8.20;
 /**
  * @title ElytroInfoRecorder
  * @notice A general purpose event recorder for wallet-related information
+ * Key Features:
+ * - Event-based information recording
+ * - Gas-efficient design
+ * - Support for multiple data categories
+ * - Indexed parameters for efficient querying
+ * - Flexible data encoding support
+ * Common Categories:
+ * ```solidity
+ * bytes32 constant GUARDIAN_INFO = keccak256("GUARDIAN_INFO");
+ * ```
+ *
+ * Usage Example:
+ * ```solidity
+ * // Recording Guardian information
+ * bytes32 category = keccak256("GUARDIAN_INFO");
+ * address[] memory guardians = // guardian addresses
+ * uint256 threshold = // threshold value
+ * bytes memory guardianData = abi.encode(guardians, threshold);
+ * elytroInfoRecorder.recordData(category, guardianData);
+ * ```
+ * Security Considerations:
+ * 1. All recorded data is publicly visible on-chain
+ * 2. Only the wallet itself can record its data (msg.sender)
  */
 contract ElytroInfoRecorder {
     /**
